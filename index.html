@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>기믹 랜덤 조합</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Noto Sans KR', Arial, sans-serif;
+            padding: 40px 20px;
+            text-align: center;
+            background: #ffffff;
+        }
+        
+        h1 {
+            color: #004B3E;
+            margin-bottom: 40px;
+            font-size: 42px;
+        }
+        
+        /* 제외 패널 */
+        .exclude-panel {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 12px;
+            margin: 0 auto 40px;
+            max-width: 900px;
+            border: 2px solid #e5e5e5;
+            text-align: left;
+        }
+        
+        .exclude-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #004B3E;
+            margin-bottom: 10px;
+        }
+        
+        .exclude-subtitle {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 20px;
+        }
+        
+        .category-section {
+            margin-bottom: 20px;
+        }
+        
+        .category-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #004B3E;
+            margin-bottom: 10px;
+            padding: 8px 12px;
+            background: white;
+            border-radius: 6px;
+            display: inline-block;
+        }
+        
+        .gimmick-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .gimmick-checkbox {
+            display: flex;
+            align-items: center;
+            padding: 10px 12px;
+            background: white;
+            border: 2px solid #e5e5e5;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+        
+        .gimmick-checkbox:hover {
+            border-color: #004B3E;
+            background: #f0f5f4;
+        }
+        
+        .gimmick-checkbox input {
+            margin-right: 8px;
+            cursor: pointer;
+            width: 18px;
+            height: 18px;
+        }
+        
+        .gimmick-checkbox.excluded {
+            background: #ffe5e5;
+            border-color: #ff6b6b;
+            color: #999;
+            text-decoration: line-through;
+        }
+        
+        .exclude-controls {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .control-btn {
+            padding: 10px 20px;
+            background: white;
+            color: #666;
+            border: 2px solid #e5e5e5;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .control-btn:hover {
+            border-color: #004B3E;
+            color: #004B3E;
+        }
+        
+        .exclude-count {
+            padding: 10px 20px;
+            background: #004B3E;
+            color: white;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        /* 버튼 */
+        button.generate-btn {
+            padding: 18px 60px;
+            background: #004B3E;
+            color: white;
+            border: none;
+            border-radius: 30px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 20px 0;
+            transition: all 0.3s;
+        }
+        
+        button.generate-btn:hover {
+            background: #003529;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0, 75, 62, 0.2);
+        }
+        
+        button.generate-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        /* 결과 */
+        #result {
+            margin-top: 30px;
+        }
+        
+        .result-card {
+            background: #f0f5f4;
+            padding: 20px;
+            margin: 15px auto;
+            max-width: 400px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .result-category {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+        
+        .result-gimmick {
+            font-size: 20px;
+            font-weight: bold;
+            color: #004B3E;
+        }
+        
+        .result-stats {
+            margin-top: 30px;
+            padding: 15px;
+            background: #e8f5e9;
+            border-radius: 10px;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .warning {
+            color: #FF6B6B;
+            padding: 30px;
+            font-size: 18px;
+        }
+        
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 32px;
+            }
+            
+            .gimmick-grid {
+                grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+            }
+            
+            .exclude-panel {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>🎮 기믹 랜덤 조합</h1>
+    
+    <!-- 제외 패널 -->
+    <div class="exclude-panel">
+        <div class="exclude-title">🚫 제외할 기믹 선택</div>
+        <div class="exclude-subtitle">체크박스를 선택하여 특정 기믹을 랜덤 조합에서 제외할 수 있습니다.</div>
+        
+        <div class="category-section">
+            <div class="category-name">⭐ 1포인트 기믹</div>
+            <div class="gimmick-grid" id="point1Grid"></div>
+        </div>
+        
+        <div class="category-section">
+            <div class="category-name">⭐⭐ 2포인트 기믹</div>
+            <div class="gimmick-grid" id="point2Grid"></div>
+        </div>
+        
+        <div class="category-section">
+            <div class="category-name">📦 일반 기믹</div>
+            <div class="gimmick-grid" id="normalGrid"></div>
+        </div>
+        
+        <div class="exclude-controls">
+            <button class="control-btn" onclick="selectAll()">전체 선택</button>
+            <button class="control-btn" onclick="deselectAll()">전체 해제</button>
+            <div class="exclude-count">
+                제외된 기믹: <span id="excludeCount">0</span>개
+            </div>
+        </div>
+    </div>
+    
+    <!-- 생성 버튼 -->
+    <button class="generate-btn" onclick="generateRandom()">새로 뽑기</button>
+    
+    <!-- 결과 영역 -->
+    <div id="result"></div>
+    
+    <script>
+        // 기믹 데이터
+        const GIMMICKS = {
+            point1: [
+                '오븐', '토끼풀화단', '블록박스폭탄', '컬러박스', 
+                '플라스크', '노이', '메모판', '캡슐오리박스', 
+                '곰인형상자', '사탕병', '양털'
+            ],
+            point2: [
+                '버블꽃', '폭탄주머니', '양털바구니', '벽돌', 
+                '오로라버블꽃', '램프', '사물함', '분홍꽃화분', 
+                '분홍잔디', '캡슐오리'
+            ],
+            normal: [
+                '택배박스', '컵', '잔디', '클로버석상', 
+                '사과', '카펫', '밤', '진주조개', '석판'
+            ]
+        };
+        
+        // 제외된 기믹 저장
+        let excludedGimmicks = new Set();
+        
+        // 페이지 로드 시 체크박스 생성
+        window.addEventListener('DOMContentLoaded', () => {
+            initializeCheckboxes();
+        });
+        
+        // 체크박스 초기화
+        function initializeCheckboxes() {
+            createCheckboxes('point1Grid', GIMMICKS.point1);
+            createCheckboxes('point2Grid', GIMMICKS.point2);
+            createCheckboxes('normalGrid', GIMMICKS.normal);
+        }
+        
+        // 체크박스 생성
+        function createCheckboxes(gridId, gimmicks) {
+            const grid = document.getElementById(gridId);
+            gimmicks.forEach(gimmick => {
+                const label = document.createElement('label');
+                label.className = 'gimmick-checkbox';
+                
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.value = gimmick;
+                checkbox.onchange = (e) => toggleExclude(gimmick, e.target.checked, label);
+                
+                const text = document.createElement('span');
+                text.textContent = gimmick;
+                
+                label.appendChild(checkbox);
+                label.appendChild(text);
+                grid.appendChild(label);
+            });
+        }
+        
+        // 제외 토글
+        function toggleExclude(gimmick, isChecked, label) {
+            if (isChecked) {
+                excludedGimmicks.add(gimmick);
+                label.classList.add('excluded');
+            } else {
+                excludedGimmicks.delete(gimmick);
+                label.classList.remove('excluded');
+            }
+            updateExcludeCount();
+        }
+        
+        // 제외 카운트 업데이트
+        function updateExcludeCount() {
+            document.getElementById('excludeCount').textContent = excludedGimmicks.size;
+        }
+        
+        // 전체 선택
+        function selectAll() {
+            document.querySelectorAll('.gimmick-checkbox input').forEach(checkbox => {
+                if (!checkbox.checked) {
+                    checkbox.checked = true;
+                    const label = checkbox.closest('.gimmick-checkbox');
+                    toggleExclude(checkbox.value, true, label);
+                }
+            });
+        }
+        
+        // 전체 해제
+        function deselectAll() {
+            document.querySelectorAll('.gimmick-checkbox input').forEach(checkbox => {
+                if (checkbox.checked) {
+                    checkbox.checked = false;
+                    const label = checkbox.closest('.gimmick-checkbox');
+                    toggleExclude(checkbox.value, false, label);
+                }
+            });
+        }
+        
+        // 사용 가능한 기믹 가져오기
+        function getAvailableGimmicks() {
+            const all = [...GIMMICKS.point1, ...GIMMICKS.point2, ...GIMMICKS.normal];
+            return all.filter(g => !excludedGimmicks.has(g));
+        }
+        
+        // 배열 섞기
+        function shuffleArray(array) {
+            const arr = [...array];
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+        
+        // 충돌 검사
+        function canAddToCombo(combo, gimmick) {
+            // 버블 계열 충돌
+            const bubbles = ['플라스크', '오로라버블꽃', '버블꽃'];
+            if (bubbles.includes(gimmick) && combo.some(g => bubbles.includes(g))) {
+                return false;
+            }
+            
+            // 노이 ↔ 캡슐오리박스
+            if (gimmick === '노이' && combo.includes('캡슐오리박스')) return false;
+            if (gimmick === '캡슐오리박스' && combo.includes('노이')) return false;
+            
+            // 캡슐오리 ↔ 캡슐오리박스
+            if (gimmick === '캡슐오리' && combo.includes('캡슐오리박스')) return false;
+            if (gimmick === '캡슐오리박스' && combo.includes('캡슐오리')) return false;
+            
+            // 카펫 충돌
+            const carpetIncompatible = ['잔디', '분홍잔디', '분홍꽃화분', '석판', '토끼풀화단'];
+            if (gimmick === '카펫' && combo.some(g => carpetIncompatible.includes(g))) {
+                return false;
+            }
+            if (carpetIncompatible.includes(gimmick) && combo.includes('카펫')) {
+                return false;
+            }
+            
+            // 분홍 기믹 충돌
+            const pinkGimmicks = ['분홍꽃화분', '분홍잔디'];
+            const pinkIncompatible = ['카펫', '잔디', '석판'];
+            if (pinkGimmicks.includes(gimmick) && combo.some(g => pinkIncompatible.includes(g))) {
+                return false;
+            }
+            if (pinkIncompatible.includes(gimmick) && combo.some(g => pinkGimmicks.includes(g))) {
+                return false;
+            }
+            
+            return true;
+        }
+        
+        // 세트 규칙 검사
+        function validateSetRules(combo) {
+            // 분홍 세트
+            const hasPinkFlower = combo.includes('분홍꽃화분');
+            const hasPinkGrass = combo.includes('분홍잔디');
+            if (hasPinkFlower !== hasPinkGrass) {
+                return false;
+            }
+            
+            // 양털 세트
+            const hasWoolBasket = combo.includes('양털바구니');
+            const hasWool = combo.includes('양털');
+            if (hasWoolBasket && !hasWool) {
+                return false;
+            }
+            
+            return true;
+        }
+        
+        // 조합 생성 시도
+        function tryGenerateCombo(availableGimmicks) {
+            const shuffled = shuffleArray(availableGimmicks);
+            const combo = [];
+            
+            for (const gimmick of shuffled) {
+                if (combo.length >= 4) break;
+                if (canAddToCombo(combo, gimmick)) {
+                    combo.push(gimmick);
+                }
+            }
+            
+            if (combo.length !== 4 || !validateSetRules(combo)) {
+                return null;
+            }
+            
+            return combo;
+        }
+        
+        // 랜덤 생성
+        function generateRandom() {
+            const availableGimmicks = getAvailableGimmicks();
+            
+            // 기믹이 부족한 경우
+            if (availableGimmicks.length < 4) {
+                document.getElementById('result').innerHTML = `
+                    <div class="warning">
+                        ⚠️ 사용 가능한 기믹이 4개 미만입니다!<br>
+                        제외 설정을 조정해주세요.
+                    </div>
+                `;
+                return;
+            }
+            
+            let result = null;
+            let attempts = 0;
+            const maxAttempts = 100;
+            
+            while (!result && attempts < maxAttempts) {
+                result = tryGenerateCombo(availableGimmicks);
+                attempts++;
+            }
+            
+            if (result) {
+                displayResult(result, attempts);
+            } else {
+                document.getElementById('result').innerHTML = `
+                    <div class="warning">
+                        ⚠️ 조합 생성에 실패했습니다.<br>
+                        제외된 기믹이 너무 많거나 조합 규칙상 생성이 어렵습니다.<br>
+                        (${maxAttempts}번 시도)
+                    </div>
+                `;
+            }
+        }
+        
+        // 결과 표시
+        function displayResult(result, attempts) {
+            let html = '<h2>🎲 뽑힌 기믹 조합</h2>';
+            
+            result.forEach((gimmick, index) => {
+                let category = '';
+                let color = '';
+                
+                if (GIMMICKS.point1.includes(gimmick)) {
+                    category = '⭐ 1포인트';
+                    color = '#FFD700';
+                } else if (GIMMICKS.point2.includes(gimmick)) {
+                    category = '⭐⭐ 2포인트';
+                    color = '#FF6B6B';
+                } else {
+                    category = '📦 일반';
+                    color = '#4ECDC4';
+                }
+                
+                html += `<div class="result-card" style="border-left: 5px solid ${color};">
+                    <div class="result-category">${category}</div>
+                    <div class="result-gimmick">${index + 1}. ${gimmick}</div>
+                </div>`;
+            });
+            
+            // 통계
+            const point1Count = result.filter(g => GIMMICKS.point1.includes(g)).length;
+            const point2Count = result.filter(g => GIMMICKS.point2.includes(g)).length;
+            const normalCount = result.filter(g => GIMMICKS.normal.includes(g)).length;
+            
+            html += `<div class="result-stats">
+                <strong>📊 조합 정보</strong><br>
+                1포인트: ${point1Count}개 | 
+                2포인트: ${point2Count}개 | 
+                일반: ${normalCount}개<br>
+                <span style="color: #666; font-size: 13px;">
+                    (${attempts}번 만에 생성 완료)
+                </span>
+            </div>`;
+            
+            document.getElementById('result').innerHTML = html;
+        }
+    </script>
+</body>
+</html>
